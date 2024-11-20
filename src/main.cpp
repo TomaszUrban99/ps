@@ -3,14 +3,24 @@
 #include <fftw3.h>
 
 #include "fading.hh"
+#include "filter.hh"
 
 int main(int argc, char **argv){
 
+    /*
     fading Fading;
 
     Fading.loadFile("/home/tomasz/Downloads/africa-toto.wav");
     Fading.processFile();
     Fading.outputFile("/home/tomasz/Documents/example_output.wav");
+    */
+
+   
+   filter Filter;
+   Filter.load_file("/home/tomasz/Downloads/africa-toto.wav");
+   Filter.process_file(500);
+   Filter.outputFile("/home/tomasz/Documents/example_output.wav");
+
 
     //AudioFile<double> audioFile;
     //fftw_complex *in, *out;
@@ -35,6 +45,13 @@ int main(int argc, char **argv){
     //audioFile.save("/home/tomasz/Documents/example_output.wav", AudioFileFormat::Wave);
 
     //audioFile.printSummary();
+
+    // Schemat architektury, dokładniej opisać, dokładnie opisać biblioteki
+    // Etap II 
+    // Dopisać w dokumentacji, że wszystko będzie korzystało z konsoli, jak korzystać z niej
+    // Upload dokumentów 
+    // wykonać wcześniej
+    // W przypadku 
 
     return 0;
 }

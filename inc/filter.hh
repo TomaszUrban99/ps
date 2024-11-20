@@ -2,6 +2,7 @@
 #define FILTER_HH
 
 #include <fftw3.h>
+#include <cmath>
 #include </home/tomasz/opt/AudioFile-master/AudioFile.h>
 
 class filter {
@@ -11,7 +12,11 @@ class filter {
 
     public:
 
-    bool process_file();
+    bool load_file(std::string pathToWavFile);
+
+    bool process_file( int freqBoundary );
+
+    bool outputFile(std::string pathToWAVOutputFile);
 
 };
 
