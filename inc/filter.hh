@@ -1,22 +1,36 @@
 #ifndef FILTER_HH
 #define FILTER_HH
 
+#include <vector>
 #include <fftw3.h>
 #include <cmath>
+#include <liquid/liquid.h>
+#include <memory>
+
 #include </home/tomasz/opt/AudioFile-master/AudioFile.h>
+
+enum filter_type { butterworth, lowpass, highpass };
 
 class filter {
 
-    AudioFile<double> _fileHandle;
     double _boundary;
+    int _order;
+    double _sample_rate;
+
+    enum filter_type _type;
+
+    iirfilt_crcf _filterObj;
+
+    float *_A;
+    float *_B;
 
     public:
 
-    bool load_file(std::string pathToWavFile);
+    filter ( double boundary, int order,  enum filter_type _type, double sample_rate );
 
-    bool process_file( int freqBoundary );
+    ~filter();
 
-    bool outputFile(std::string pathToWAVOutputFile);
+    bool butterworth_filter ( std::vector<double> &inputSequence );
 
 };
 

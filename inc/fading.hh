@@ -2,30 +2,20 @@
 #define FADING_HH
 
 #include <string>
+#include <complex>
+#include <liquid/liquid.h>
 #include </home/tomasz/opt/AudioFile-master/AudioFile.h>
 
 class fading {
 
-    AudioFile<double> _fileHandle;
-
     double _a;
 
-    void count_coefficient();
+    void count_coefficient( int numberOfSamples );
 
     public:
 
-    /*!
-        \brief Load data from .wav file
+    bool processFile(std::vector<double> &audioSignal);
 
-        \par std::string pathToWAVFile - path to .wav file
-
-        \retval
-    */
-    bool loadFile(std::string pathToWAVFile);
-
-    bool processFile();
-
-    bool outputFile(std::string pathToWAVOutputFile);
 };
 
 #endif

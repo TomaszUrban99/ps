@@ -1,71 +1,69 @@
 #include "filter.hh"
 
-bool filter::load_file(std::string pathToWavFile){
+filter::filter ( double boundary, int order,  enum filter_type _type, double sample_rate ){
+    
+    this->_boundary = boundary;
+    this->_order = order;
+    this->_type = _type;
+    this->_sample_rate = sample_rate;
 
-        if(!_fileHandle.load(pathToWavFile)){
-            std::cerr<<"Failed to load WAV file"<<std::endl;
-            return false;
-        }
-        else{
-            std::cout << "File " << pathToWavFile << ": succesfully loaded" << std::endl;
-            return true;
-        }
+    this->_A = (float*) ( malloc(sizeof(float)*(this->_order+1)));
+    this->_B = (float*) ( malloc(sizeof(float)*(this->_order+1)));
+  
 }
 
-bool filter::outputFile(std::string pathToWAVOutputFile){
-        _fileHandle.save(pathToWAVOutputFile,AudioFileFormat::Wave);
-        return true;
+filter::~filter(){
+
+    /* Free memory alocated for filter coefficients */
+    free(this->_A);
+    free(this->_B);
 }
 
-bool filter::process_file( int freqBoundary ){
-    
-    fftw_complex *out_rev;
-    
-    fftw_plan rev_p;
-    
-    fftw_complex *in;
-    
-    fftw_complex *in_rev;
-    fftw_complex *out;
-    
-    fftw_plan p;
+bool filter::butterworth_filter ( std::vector<double> &inputSequence ){
 
-    /* Input array */
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * _fileHandle.getNumSamplesPerChannel());
-    /* Output array */
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * _fileHandle.getNumSamplesPerChannel());
-
-    
-    p = fftw_plan_dft_1d(_fileHandle.getNumSamplesPerChannel(),in,out, FFTW_FORWARD, FFTW_ESTIMATE);
-    rev_p = fftw_plan_dft_1d(_fileHandle.getNumSamplesPerChannel(),out,in, FFTW_BACKWARD, FFTW_ESTIMATE);
-    
-    for ( int i = 0; i < _fileHandle.getNumSamplesPerChannel(); ++i){
-        in[i][0] = _fileHandle.samples[0][i];
-        in[i][1] = 0;
+    /* Check filter type */
+    if ( this->_type == lowpass ){
+    liquid_iirdes(LIQUID_IIRDES_BUTTER,
+    LIQUID_IIRDES_LOWPASS,LIQUID_IIRDES_TF, this->_order,this->_boundary/this->_sample_rate,0,
+    120,1, this->_B, this->_A);
+    }
+    else if ( this->_type == highpass ){
+        liquid_iirdes(LIQUID_IIRDES_BUTTER,
+    LIQUID_IIRDES_HIGHPASS,LIQUID_IIRDES_TF, this->_order,this->_boundary/this->_sample_rate,0,
+    120,1, this->_B, this->_A);
     }
 
-    fftw_execute_dft(p,in,out);
+    std::vector<double> outputSequence(inputSequence.size(),0.0);
 
-    /* Apply filter */
-    double delta_freq = ((double) _fileHandle.getSampleRate()) / _fileHandle.getNumSamplesPerChannel();
-    int sample_number = freqBoundary / delta_freq;
-
-    for ( int i = sample_number; i < _fileHandle.getNumSamplesPerChannel(); ++i ){
-        out[i][0] = 0;
-        out[i][1] = 0;
+    for ( int i = 0; i <= this->_order; ++i ){
+        outputSequence[i] = inputSequence[i];
     }
 
-    fftw_execute_dft(rev_p,out,in);
+    /* Apply filter - working in time domain */
+    for ( int j = this->_order; j < inputSequence.size(); ++j ){
 
-    for ( int i = 0; i < _fileHandle.getNumSamplesPerChannel(); ++i){
-        _fileHandle.samples[0][i] = in[i][0] / _fileHandle.getNumSamplesPerChannel();
-    } 
-   
+        /* Feedforward part: related to input */
+        double feed_forward_part = 0;
+        for ( int i = 0; i <= this->_order; ++i ){
+            
+            if ( j - i  >= 0){ 
+            feed_forward_part = feed_forward_part + _B[i] * inputSequence[j - i];
+            }
+        }
 
-    fftw_destroy_plan(p);
-    fftw_destroy_plan(rev_p);
-    fftw_free(in);
-    fftw_free(out);
-    
+        /* Feedback part: related to output */
+        double feed_back_part = 0.0;
+       
+        for ( int i = 1; i <= this->_order; ++i ){
+            if ( j - i >= 0){
+            feed_back_part = feed_back_part + _A[i] * outputSequence[j - i];
+            }
+        }
+
+        outputSequence[j] = feed_forward_part - feed_back_part; 
+    }
+
+    inputSequence = std::move(outputSequence);
+
     return true;
 }

@@ -1,50 +1,86 @@
 #include <iostream>
 #include </home/tomasz/opt/AudioFile-master/AudioFile.h>
 #include <fftw3.h>
+#include <stdlib.h>
 
 #include "fading.hh"
 #include "filter.hh"
+#include "commandLineParser.hh"
 
 int main(int argc, char **argv){
 
-    /*
-    fading Fading;
+/*    CommandLineParser parser(argc,argv);*/
 
-    Fading.loadFile("/home/tomasz/Downloads/africa-toto.wav");
-    Fading.processFile();
-    Fading.outputFile("/home/tomasz/Documents/example_output.wav");
-    */
+    /* Object for storing data included in .WAV file */
+    // AudioFile<double> file;
 
-   
-   filter Filter;
-   Filter.load_file("/home/tomasz/Downloads/africa-toto.wav");
-   Filter.process_file(500);
-   Filter.outputFile("/home/tomasz/Documents/example_output.wav");
-
-
-    //AudioFile<double> audioFile;
-    //fftw_complex *in, *out;
-    //fftw_plan p;
-
-    //in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 6570432);
-    //out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * 6570432);
-
-    //audioFile.load("/home/tomasz/Downloads/africa-toto.wav");
-    //std::vector<std::vector<double>> samples = audioFile.samples;
-
-    /*for ( int i = 0; i < 6570432; ++i ){
-        in[0][i] = samples[0][i];
-        in[1][i] = 0;
+    /* Load WAV file */
+    /*if (  ! file.load(argv[1]) ){
+        std::cerr << "Failed to load file " << std::endl;
+        return 1;
     }*/
 
-    //p = fftw_plan_dft_1d(6570432,in,out,FFTW_FORWARD,FFTW_ESTIMATE);
+    /* Create flter object */
+    /*filter Filter ( 600, 4, butterworth, file.getSampleRate());
+    Filter.butterworth_filter(file.samples[0]);
 
-    //std::cout << "Dim 1: " << samples.size();
-    //std::cout << "Dim 2: " << samples[0].size();
+    file.save("/home/tomasz/Documents/example_output.wav");*/
 
-    //audioFile.save("/home/tomasz/Documents/example_output.wav", AudioFileFormat::Wave);
+    try {
+        CommandLineParser parser(argc, argv);
 
-    //audioFile.printSummary();
+        // If the user requests help, print it and exit
+        if (parser.isHelpRequested()) {
+            parser.printHelp();
+            return 0;
+        }
+
+        std::string operation = parser.getOption("operation");       
+        
+         // Get the input WAV file and load data
+        std::string inputWavFile = parser.positionalArguments_[0];
+        AudioFile<double> file;
+        file.load(inputWavFile);
+
+        if ( operation == "filter"){
+
+        // Example: Get filter parameters
+        std::string cutoff = parser.getOption("frequency");
+        std::string order = parser.getOption("order");
+        std::string type = parser.getOption("type");
+
+        // Print out the filter parameters and input file
+        std::cout << "Input WAV File: " << inputWavFile << std::endl;
+        std::cout << "Cutoff Frequency: " << cutoff << " Hz" << std::endl;
+        std::cout << "Filter Order: " << order << std::endl;
+        std::cout << "Filter Type: " << type << std::endl;
+        
+        if ( type == "lowpass" ){
+            filter butterworth(atof(cutoff.c_str()),atoi(order.c_str()),lowpass,file.getSampleRate());
+            butterworth.butterworth_filter(file.samples[0]);
+        }
+        else {
+            filter butterworth(atof(cutoff.c_str()),atoi(order.c_str()),highpass,file.getSampleRate());
+            butterworth.butterworth_filter(file.samples[0]);
+        }
+
+        }
+        else if ( operation == "fading"){
+            fading fade;
+            fade.processFile(file.samples[0]);
+        }
+
+        std::string out = parser.getOption("output");
+        std::cout << out << std::endl;
+        file.save(out);
+
+    } catch (const std::invalid_argument& e) {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
 
     // Schemat architektury, dokładniej opisać, dokładnie opisać biblioteki
     // Etap II 
@@ -52,6 +88,3 @@ int main(int argc, char **argv){
     // Upload dokumentów 
     // wykonać wcześniej
     // W przypadku 
-
-    return 0;
-}
