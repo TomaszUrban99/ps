@@ -87,6 +87,28 @@ void CommandLineParser::parse(int argc, char** argv) {
                     throw std::invalid_argument("Error: Option -d requires output .wav file");
                 }
             }
+            else if ( arg == "-a" || arg == "--amplify" ){
+
+                 args_["operation"] = "amplify";
+                if ( i + 1 < argc ){
+                         std::string amp = argv[++i];
+                        args_["amplify"] = amp;
+
+                } else {
+                    throw std::invalid_argument("Error: Option -a requires output .wav file");
+                }
+            }
+            else if ( arg == "-p" ){
+                args_["operation"] = "speed_change";
+
+                if ( i + 1 < argc ){
+                         std::string amp = argv[++i];
+                        args_["speed_change"] = amp;
+
+                } else {
+                    throw std::invalid_argument("Error: Option -a requires output .wav file");
+                }
+            }
             else if ( arg == "-w" || arg == "--what" ){
                 args_["operation"] = "fading";
             }

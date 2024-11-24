@@ -1,30 +1,14 @@
 #include <iostream>
 #include </home/tomasz/opt/AudioFile-master/AudioFile.h>
-#include <fftw3.h>
 #include <stdlib.h>
 
 #include "fading.hh"
 #include "filter.hh"
 #include "commandLineParser.hh"
+#include "speedChange.hh"
+#include "amplification.hh"
 
 int main(int argc, char **argv){
-
-/*    CommandLineParser parser(argc,argv);*/
-
-    /* Object for storing data included in .WAV file */
-    // AudioFile<double> file;
-
-    /* Load WAV file */
-    /*if (  ! file.load(argv[1]) ){
-        std::cerr << "Failed to load file " << std::endl;
-        return 1;
-    }*/
-
-    /* Create flter object */
-    /*filter Filter ( 600, 4, butterworth, file.getSampleRate());
-    Filter.butterworth_filter(file.samples[0]);
-
-    file.save("/home/tomasz/Documents/example_output.wav");*/
 
     try {
         CommandLineParser parser(argc, argv);
@@ -68,6 +52,14 @@ int main(int argc, char **argv){
         else if ( operation == "fading"){
             fading fade;
             fade.processFile(file.samples[0]);
+        }
+        else if ( operation == "speed_change"){
+            SpeedChange speedchange(atof(parser.getOption("speed_change").c_str()));
+            speedchange.processFile(file.samples[0]);
+        }
+        else if ( operation == "amplify"){
+            Amplification amplify(atof(parser.getOption("amplify").c_str()));
+            amplify.processFile(file.samples[0]);
         }
 
         std::string out = parser.getOption("output");
